@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>01.03 - Vertices</title>
+	<script type="text/javascript" src="stats.js"></script> 
+		<script type="text/javascript" src="dat.gui.js"></script> 
+    <script src="three.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<script>
+    // global variables
+    var renderer;
+    var scene;
+    var camera;
+    function init() {
+        
+		// create a scene, that will hold all our elements such as objects, cameras and lights.
+        scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // create a render, sets the background color and the size
+        renderer = new THREE.WebGLRenderer();
+        renderer.setClearColor(0x000000, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMapEnabled = true;
+
+        // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(20, 20);
+        var planeMaterial = new THREE.MeshLambertMaterial({color: 0xcccccc});
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.receiveShadow = true;
+
+        // rotate and position the plane
+        //plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = 0;
+        plane.position.z = 0;
+         //add the plane to the scene
+        //scene.add(plane);
+		
+		var ambient = new THREE.AmbientLight(0x808080);
+		scene.add(ambient);
+		
+		// If it's an array, build cubes on top - to create height.
+		// If it's a number, then build it that many high, or that many down (negative)
+		var map = "111#" +
+		"#" +
+		"111115#" +
+		"111111#" +
+		"111111#" +
+		"111111#" +
+		"111111#" +
+		"111111#" +
+		"11111111#" +
+		"1#" +
+		"1#" +
+		"X#";
+		map = map.split("#");
+		HORIZONTAL_UNIT = 2.0;
+		VERTICAL_UNIT = 2.0;
+		ZSIZE = map.length * HORIZONTAL_UNIT;
+		XSIZE = map[0].length * HORIZONTAL_UNIT;
+		
+		for (var i = 0, rows = map.length; i < rows; i++) {
+			for (var j = 0, cols = map[i].length; j < cols; j++) {
+				addVoxel(map[i].charAt(j), i, j, Math.random() * 0xFFFFFF);
+				console.log("Writing Tiles to Screen...");
+			}
+		}
+
+        // position and point the camera to the center of the scene
+        camera.position.x = 30;
+        camera.position.y = 30;
+        camera.position.z = 30;
+        camera.lookAt(scene.position);
+
+        // add spotlight for the shadows
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(10, 20, 20);
+        spotLight.shadowCameraNear = 20;
+        spotLight.shadowCameraFar = 50;
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+        
+		// add the output of the renderer to the html element
+        document.body.appendChild(renderer.domElement);
+		addControlGui(control);
+        addStatsObject();
+        render();
+    }
+
+	    // setup the control object for the control gui
+        control = new function () {
+            this.rotationSpeed = 0.001;
+        };
+        // add extras
+      
+	   
+	   function addControlGui(controlObject) {
+        var gui = new dat.GUI();
+        gui.add(controlObject, 'rotationSpeed', -0.01, 0.01);
+    }
+
+    function addStatsObject() {
+        stats = new Stats();
+        stats.setMode(0);
+
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+
+        document.body.appendChild(stats.domElement);
+    }
+	
+	
+	
+	/**
+     * Called when the scene needs to be rendered. Delegates to requestAnimationFrame
+     * for future renders
+     */
+    function render() {
+        var rotSpeed = control.rotationSpeed;
+        camera.position.x = camera.position.x * Math.cos(rotSpeed) + camera.position.z * Math.sin(rotSpeed);
+        camera.position.z = camera.position.z * Math.cos(rotSpeed) - camera.position.x * Math.sin(rotSpeed);
+        camera.lookAt(scene.position);
+
+        // render using requestAnimationFrame
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+    }
+
+	
+    /**
+     * Function handles the resize event. This make sure the camera and the renderer
+     * are updated at the correct moment.
+     */
+    function handleResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+	var spawnPoints = [1, 2, 3];
+	
+	
+	function addVoxel(type, row, col, coLo) {
+		var z = (row+1) * HORIZONTAL_UNIT - ZSIZE * 0.5,
+		x = (col+1) * HORIZONTAL_UNIT - XSIZE * 0.5;
+	if (!isNaN(type)){
+	
+	console.log("type:" + type);
+	for (var i = 0; i < type; i++) {
+		var geo = new THREE.CubeGeometry(HORIZONTAL_UNIT, 
+		VERTICAL_UNIT, HORIZONTAL_UNIT);
+		var material = new THREE.MeshPhongMaterial({
+		color: coLo });
+		var clone = new THREE.Mesh(geo, material);
+		mod = 5.0 + i;
+		console.log("I: " + i);
+	clone.position.set(x, VERTICAL_UNIT*mod, z);
+	console.log("Scene Position: " + scene.position);
+	scene.add(clone);
+	}	
+	}
+	
+			switch(type) {
+					case 'O': break;
+					case 'S':
+						spawnPoints.push(new THREE.Vector3(x, 15, z));
+						break;
+					case 'X':
+ 
+	var geo = new THREE.CubeGeometry(HORIZONTAL_UNIT, 
+	VERTICAL_UNIT, HORIZONTAL_UNIT);
+	var material = new THREE.MeshPhongMaterial({
+	color: Math.random() * 0xFFFFFF	});
+	var mesh = new THREE.Mesh(geo, material);
+	mesh.position.set(x, VERTICAL_UNIT*5.0, z);
+	scene.add(mesh);
+
+	//var clone = new THREE.Mesh(geo, material);
+	//clone.position.set(x, VERTICAL_UNIT*6.0, z);
+	//scene.add(clone);
+	break;
+}
+}
+    window.onload = init; // calls the init function when the window is done loading
+    // calls the handleResize function when the window is resized
+    window.addEventListener('resize', handleResize, false);
+</script>
+<body>
+</body>
+</html>
